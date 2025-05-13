@@ -1,0 +1,1 @@
+bash fsdp_sing_local.sh --nnodes $NODES --nproc_per_node $GPUS --node_rank $$AZUREML_CR_NODE_RANK --master_addr $$AZ_BATCHAI_JOB_MASTER_NODE_IP --master_port 9901 --job_name "flow+04_0509_df100_full_Prometheus"
