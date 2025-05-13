@@ -188,6 +188,21 @@ def train(cfg: TrainPipelineConfig):
     logger = init_logger(cfg, rank)
     logger.info(f"DIST INFO: world_size={world_size}, local_rank={local_rank}, world_rank={world_rank}, node_rank={node_rank}, master_uri={master_uri}")
     
+    step = 1
+    seed = cfg.seed + rank
+    if cfg.resume:
+        logger.info("Resume is set, will model from checkpoint...")
+        os.makedirs(cfg.output_dir, exist_ok=True)
+        pts = sorted(glob.glob(os.path.join(cfg.output_dir, "*.pt")))
+        logger.info(f"Found {len(pts)} checkpoints, names are {pts}")
+        if pts:
+            steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
+            step = sorted(steps)[-1] + 1
+            seed += (step-1)
+        else:
+            cfg.resume = False
+            logger.info("No checkpoint found, starting from scratch.")
+            
     if int(os.environ.get('RANK', 0)) == 0:
         logger.info(pformat(cfg.to_dict()))
         if cfg.wandb.enable and cfg.wandb.project:
@@ -202,29 +217,8 @@ def train(cfg: TrainPipelineConfig):
     if cfg.seed is not None:
         set_seed(cfg.seed)
     
-    # 训练状态初始化
-    if cfg.resume:
-        if pts:
-            cfg.resume = os.path.join(cfg.output_dir, f"step{step-1}.pt")
-            logger.info(f"Resuming from checkpoint {cfg.resume} at step {step}")
-            model_state_dict = torch.load(cfg.resume, map_location="cpu")
-            policy.load_state_dict(model_state_dict, strict=True)
-        else:
-            cfg.resume = False
-            logger.info("No checkpoint found, starting from scratch.")
         
     # 数据集初始化
-    step = 1
-    seed = cfg.seed + rank
-    if cfg.resume:
-        logger.info("Resume is set, will model from checkpoint...")
-        os.makedirs(cfg.output_dir, exist_ok=True)
-        pts = sorted(glob.glob(os.path.join(cfg.output_dir, "*.pt")))
-        logger.info(f"Found {len(pts)} checkpoints, names are {pts}")
-        if pts:
-            steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
-            step = sorted(steps)[-1] + 1
-            seed += (step-1)
             
     image_transforms = (ImageTransforms(cfg.dataset.image_transforms))
     dataset = MultiDatasetforDistTraining(
@@ -250,6 +244,14 @@ def train(cfg: TrainPipelineConfig):
         ds_meta=dataset.meta,
         weight_pt_path="/mnt/wangxiaofa/original_qw/flow+04_0509_df100_full_Prometheus/step20000.pt"
     )
+    
+    # 训练状态初始化
+    if cfg.resume:
+        if pts:
+            cfg.resume = os.path.join(cfg.output_dir, f"step{step-1}.pt")
+            logger.info(f"Resuming from checkpoint {cfg.resume} at step {step}")
+            model_state_dict = torch.load(cfg.resume, map_location="cpu")
+            policy.load_state_dict(model_state_dict, strict=True)
             
     # 设置模型全部参数为BF16
     logger.info("Setting model parameters to BF16...")
