@@ -1566,8 +1566,8 @@ class MultiDatasetforDistTraining(torch.utils.data.Dataset):
     
     def _fetch_data_dict(self, item, image_obs_keys):
         
-        for key, value in item.items():
-            print(key)
+        # for key, value in item.items():
+        #     print(key)
         
         exist_image = None
         key_to_pad = []
