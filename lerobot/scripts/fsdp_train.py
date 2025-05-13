@@ -202,8 +202,18 @@ def train(cfg: TrainPipelineConfig):
     if cfg.seed is not None:
         set_seed(cfg.seed)
     
+    # 训练状态初始化
+    if cfg.resume:
+        if pts:
+            cfg.resume = os.path.join(cfg.output_dir, f"step{step-1}.pt")
+            logger.info(f"Resuming from checkpoint {cfg.resume} at step {step}")
+            model_state_dict = torch.load(cfg.resume, map_location="cpu")
+            policy.load_state_dict(model_state_dict, strict=True)
+        else:
+            cfg.resume = False
+            logger.info("No checkpoint found, starting from scratch.")
+        
     # 数据集初始化
-    
     step = 1
     seed = cfg.seed + rank
     if cfg.resume:
@@ -240,17 +250,6 @@ def train(cfg: TrainPipelineConfig):
         ds_meta=dataset.meta,
         weight_pt_path="/mnt/wangxiaofa/original_qw/flow+04_0509_df100_full_Prometheus/step20000.pt"
     )
-    
-    # 训练状态初始化
-    if cfg.resume:
-        if pts:
-            cfg.resume = os.path.join(cfg.output_dir, f"step{step-1}.pt")
-            logger.info(f"Resuming from checkpoint {cfg.resume} at step {step}")
-            model_state_dict = torch.load(cfg.resume, map_location="cpu")
-            policy.load_state_dict(model_state_dict, strict=True)
-        else:
-            cfg.resume = False
-            logger.info("No checkpoint found, starting from scratch.")
             
     # 设置模型全部参数为BF16
     logger.info("Setting model parameters to BF16...")
