@@ -71,6 +71,7 @@ class QwenConfig(PreTrainedConfig):
 
     scheduler_warmup_steps: int = 3_000
     scheduler_decay_steps: int = -1
+    scheduler_platform_steps: int = 20_000
     scheduler_decay_lr: float = 2.5e-6
 
     # TODO: Add EMA
@@ -119,6 +120,7 @@ class QwenConfig(PreTrainedConfig):
         return CosineDecayWithWarmupSchedulerConfig(
             peak_lr=self.optimizer_lr,
             decay_lr=self.scheduler_decay_lr,
+            num_platform_steps=self.scheduler_platform_steps,
             num_warmup_steps=self.scheduler_warmup_steps,
             num_decay_steps=self.scheduler_decay_steps,
         )
