@@ -158,7 +158,7 @@ def make_policy(
 
     if weight_pt_path:
         weights = torch.load(weight_pt_path, map_location="cpu")
-        policy.load_state_dict(weights, strict=False)
+        policy.load_state_dict(weights, strict=True)
         print(f"Load our pretrain weights from:{weight_pt_path}")
     
     # policy.to(device)
