@@ -238,7 +238,7 @@ def train(cfg: TrainPipelineConfig):
         cfg=cfg.policy,
         device="cpu",
         ds_meta=dataset.meta,
-        weight_pt_path="/mnt/wangxiaofa/original_qw/flow+05_0509_df100_full_Prometheus/step10000.pt"
+        weight_pt_path="/mnt/wangxiaofa/original_qw/flow+04_0509_df100_full_Prometheus/step20000.pt"
     )
     
     # 训练状态初始化
