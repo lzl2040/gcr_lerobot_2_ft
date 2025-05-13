@@ -1566,6 +1566,9 @@ class MultiDatasetforDistTraining(torch.utils.data.Dataset):
     
     def _fetch_data_dict(self, item, image_obs_keys):
         
+        for key, value in item.items():
+            print(key)
+        
         exist_image = None
         key_to_pad = []
         new_keys = []
@@ -1626,6 +1629,10 @@ class MultiDatasetforDistTraining(torch.utils.data.Dataset):
         # Pad the action and observation vectors
         item["action"] = self.pad_vector(item["action"], self.max_action_dim)
         item["observation.state"] = self.pad_vector(item["observation.state"], self.max_state_dim)
+        
+        # Normlize the action and observation vectors
+        item["action"] = (item["action"] - self.stats["action"]["mean"]) / (self.stats["action"]["std"] + 1e-8)
+        item["observation.state"] = (item["observation.state"] - self.stats["observation.state"]["mean"]) / (self.stats["observation.state"]["std"] + 1e-8)
         
         vl_item = self._prepare_data(item)
         
@@ -1835,6 +1842,8 @@ def resolve_delta_timestamps(
 
 @parser.wrap()
 def dataset_func_test(cfg: TrainPipelineConfig):
+    # cfg.policy.type="qwen"
+    cfg.dataset.repo_id = "Whatever"
     cfg.validate()
     cfg.dataset.parent_dir="/data_16T/lerobot_openx/"
     cfg.dataset.processor="/datassd_1T/qwen25vl/Qwen2.5-VL-7B-Instruct/"
@@ -1863,6 +1872,10 @@ def dataset_func_test(cfg: TrainPipelineConfig):
         collate_fn=extra_collate_fn,
         batch_size=2
     )
+    for key, value in dataset.stats.items():
+        for k, v in value.items():
+            print(f"{key}: {k}_{v.shape}")
+    print(dataset.stats)
     dl_iter = cycle(dataloader)
     batch = next(dl_iter)
     keys = list(batch.keys())
@@ -1875,7 +1888,7 @@ def dataset_func_test(cfg: TrainPipelineConfig):
         if isinstance(batch[key], list):
             print(f"List elements: {type(batch[key][0])}")
             print(f"List actual value: {batch[key]}")
-    # print(f"Video shape: {batch['observation.images.secondary'].shape}")
+    print(f"Video shape: {batch['observation.images.secondary'].shape}")
 
     # print(dataset)
     # for i in range(1):

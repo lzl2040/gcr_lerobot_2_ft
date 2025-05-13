@@ -4,11 +4,13 @@
 NNODES=1
 NPROC_PER_NODE=2
 JOB_NAME=""
-OPTIMIZER_LR=2e-5
-SCHEDULER_WARMUP_STEPS=10000
-SCHEDULER_DECAY_STEPS=300000
-STEPS=300000
-DATA_MIX="simpler_fractal"
+OPTIMIZER_LR=2e-4
+OPTIMIZER_DECAY_LR=2.5e-6
+SCHEDULER_WARMUP_STEPS=5000
+SCHEDULER_DECAY_STEPS=25000
+SCHEDULER_PLATFORM_STEPS=20000
+STEPS=3000000
+DATA_MIX="simpler_bridge"
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
@@ -37,8 +39,16 @@ while [[ $# -gt 0 ]]; do
             JOB_NAME="$2"
             shift 2
             ;;
+        --data_mix)
+            DATA_MIX="$2"
+            shift 2
+            ;;
         --optimizer_lr)
             OPTIMIZER_LR="$2"
+            shift 2
+            ;;
+        --scheduler_decay_lr)
+            OPTIMIZER_DECAY_LR="$2"
             shift 2
             ;;
         --scheduler_warmup_steps)
@@ -47,6 +57,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --scheduler_decay_steps)
             SCHEDULER_DECAY_STEPS="$2"
+            shift 2
+            ;;
+        --scheduler_platform_steps)
+            SCHEDULER_PLATFORM_STEPS="$2"
             shift 2
             ;;
         *)
@@ -81,13 +95,15 @@ torchrun \
     --dataset.data_mix=$DATA_MIX \
     --policy.scheduler_warmup_steps=$SCHEDULER_WARMUP_STEPS \
     --policy.scheduler_decay_steps=$SCHEDULER_DECAY_STEPS \
+    --policy.scheduler_platform_steps=$SCHEDULER_PLATFORM_STEPS \
     --policy.optimizer_lr=$OPTIMIZER_LR \
+    --policy.scheduler_decay_lr=$OPTIMIZER_DECAY_LR \
     --steps=$STEPS \
     --policy.train_main_layers=0 \
     --policy.freeze_vision_encoder=false \
     --policy.train_expert_only=false \
     --wandb.enable=true \
-    --wandb.project="fsdp_qwen_pi0_ft" \
+    --wandb.project="qwen_ft" \
     --job_name="$JOB_NAME" \
     --log_dir="/mnt/wangxiaofa/logs" \
     --resume=true
