@@ -35,6 +35,7 @@ class TrainPipelineConfig(HubMixin):
     # Note that when resuming a run, the default behavior is to use the configuration from the checkpoint,
     # regardless of what's provided with the training command at the time of resumption.
     resume: bool = False
+    resume_force_path: str | None = None
     device: str | None = None  # cuda | cpu | mp
     log_dir: str | None = None
     # `use_amp` determines whether to use Automatic Mixed Precision (AMP) for training and evaluation. With AMP,

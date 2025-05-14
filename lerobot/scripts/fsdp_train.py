@@ -196,9 +196,15 @@ def train(cfg: TrainPipelineConfig):
         pts = sorted(glob.glob(os.path.join(cfg.output_dir, "*.pt")))
         logger.info(f"Found {len(pts)} checkpoints, names are {pts}")
         if pts:
-            steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
-            step = sorted(steps)[-1] + 1
-            seed += (step-1)
+            if cfg.resume_force_path is not None:
+                if cfg.resume_force_path in pts:
+                    step = int(os.path.basename(cfg.resume_force_path).split(".")[0].split("step")[1]) + 1
+                    logger.info(f"Force resume path {cfg.resume_force_path} found in {pts}")
+                else:
+                    logger.info(f"Force resume path {cfg.resume_force_path} not found in {pts}")
+                    steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
+                    step = sorted(steps)[-1] + 1
+                seed += (step-1)
         else:
             cfg.resume = False
             logger.info("No checkpoint found, starting from scratch.")
