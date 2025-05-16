@@ -191,7 +191,7 @@ def train(cfg: TrainPipelineConfig):
     step = 1
     seed = cfg.seed + rank
     if cfg.resume:
-        logger.info("Resume is set, will model from checkpoint...")
+        logger.info("Resume is set, will try to load from checkpoint...")
         os.makedirs(cfg.output_dir, exist_ok=True)
         pts = sorted(glob.glob(os.path.join(cfg.output_dir, "*.pt")))
         logger.info(f"Found {len(pts)} checkpoints, names are {pts}")
@@ -201,9 +201,16 @@ def train(cfg: TrainPipelineConfig):
                     step = int(os.path.basename(cfg.resume_force_path).split(".")[0].split("step")[1]) + 1
                     logger.info(f"Force resume path {cfg.resume_force_path} found in {pts}")
                 else:
-                    logger.info(f"Force resume path {cfg.resume_force_path} not found in {pts}")
                     steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
                     step = sorted(steps)[-1] + 1
+                    
+                    logger.info(f"Force resume path {cfg.resume_force_path} not found in {pts}, will resume from the latest checkpoint from {cfg.output_dir} at step {step}")
+                seed += (step-1)
+            else:
+                
+                steps = [int(os.path.basename(pt).split(".")[0].split("step")[1]) for pt in pts]
+                step = sorted(steps)[-1] + 1
+                logger.info(f"Resuming from checkpoint {pts[-1]} at step {step}")
                 seed += (step-1)
         else:
             cfg.resume = False
